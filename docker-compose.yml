@@ -1,7 +1,7 @@
 services:
   etcd1:
     image: bitnami/etcd:3
-    container_name: etcd1
+    hostname: etcd1
     environment:
       ETCD_NAME: etcd1
       ETCD_ROOT_PASSWORD: ${ETCD_ROOT_PASSWORD:?ETCD_ROOT_PASSWORD is required}
@@ -14,14 +14,11 @@ services:
       ETCD_INITIAL_CLUSTER_STATE: new
     networks:
       - etcd
-    expose:
-      - 2379
-      - 2380
     volumes:
       - etcd-00vol:/bitnami/etcd/data
   etcd2:
     image: bitnami/etcd:3
-    container_name: etcd2
+    hostname: etcd2
     environment:
       ETCD_NAME: etcd2
       ETCD_ROOT_PASSWORD: ${ETCD_ROOT_PASSWORD:?ETCD_ROOT_PASSWORD is required}
@@ -34,14 +31,11 @@ services:
       ETCD_INITIAL_CLUSTER_STATE: new
     networks:
       - etcd
-    expose:
-      - 2379
-      - 2380
     volumes:
       - etcd-01vol:/bitnami/etcd/data
   etcd3:
     image: bitnami/etcd:3
-    container_name: etcd3
+    hostname: etcd3
     environment:
       ETCD_NAME: etcd3
       ETCD_ROOT_PASSWORD: ${ETCD_ROOT_PASSWORD:?ETCD_ROOT_PASSWORD is required}
@@ -54,15 +48,11 @@ services:
       ETCD_INITIAL_CLUSTER_STATE: new
     networks:
       - etcd
-    expose:
-      - 2379
-      - 2380
     volumes:
       - etcd-02vol:/bitnami/etcd/data
 
   nginx:
     image: nginx:alpine
-    container_name: nginx
     configs:
       - source: nginx_config
         target: /etc/nginx/nginx.conf
