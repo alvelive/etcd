@@ -1,81 +1,69 @@
+volumes:
+  etcd:
+    external: true
+
+networks:
+  etcd_area_lan:
+    name: etcd_area_lan
+    external: true
+
 services:
-  etcd1:
+  etcd:
     image: bitnami/etcd:3
     hostname: etcd1
     environment:
-      ETCD_NAME: etcd1
+      ETCD_NAME: etcd-{{.Task.Slot}}
       ETCD_ROOT_PASSWORD: ${ETCD_ROOT_PASSWORD:?ETCD_ROOT_PASSWORD is required}
-      ETCD_INITIAL_ADVERTISE_PEER_URLS: http://etcd1:2380
-      ETCD_LISTEN_PEER_URLS: http://0.0.0.0:2380
-      ETCD_LISTEN_CLIENT_URLS: http://0.0.0.0:2379
-      ETCD_ADVERTISE_CLIENT_URLS: http://etcd1:2379
+      ETCD_ADVERTISE_CLIENT_URLS: http://etcd-{{.Task.Slot}}:2379
+      ETCD_INITIAL_ADVERTISE_PEER_URLS: http://etcd-{{.Task.Slot}}:2380
+      ETCD_INITIAL_CLUSTER_STATE: new
       ETCD_INITIAL_CLUSTER_TOKEN: ${ETCD_INITIAL_CLUSTER_TOKEN:?ETCD_INITIAL_CLUSTER_TOKEN is required}
       ETCD_INITIAL_CLUSTER: etcd1=http://etcd1:2380,etcd2=http://etcd2:2380,etcd3=http://etcd3:2380
-      ETCD_INITIAL_CLUSTER_STATE: new
-    networks:
-      - etcd
-    volumes:
-      - etcd-00vol:/bitnami/etcd/data
-  etcd2:
-    image: bitnami/etcd:3
-    hostname: etcd2
-    environment:
-      ETCD_NAME: etcd2
-      ETCD_ROOT_PASSWORD: ${ETCD_ROOT_PASSWORD:?ETCD_ROOT_PASSWORD is required}
-      ETCD_INITIAL_ADVERTISE_PEER_URLS: http://etcd2:2380
-      ETCD_LISTEN_PEER_URLS: http://0.0.0.0:2380
       ETCD_LISTEN_CLIENT_URLS: http://0.0.0.0:2379
-      ETCD_ADVERTISE_CLIENT_URLS: http://etcd2:2379
-      ETCD_INITIAL_CLUSTER_TOKEN: ${ETCD_INITIAL_CLUSTER_TOKEN:?ETCD_INITIAL_CLUSTER_TOKEN is required}
-      ETCD_INITIAL_CLUSTER: etcd1=http://etcd1:2380,etcd2=http://etcd2:2380,etcd3=http://etcd3:2380
-      ETCD_INITIAL_CLUSTER_STATE: new
-    networks:
-      - etcd
-    volumes:
-      - etcd-01vol:/bitnami/etcd/data
-  etcd3:
-    image: bitnami/etcd:3
-    hostname: etcd3
-    environment:
-      ETCD_NAME: etcd3
-      ETCD_ROOT_PASSWORD: ${ETCD_ROOT_PASSWORD:?ETCD_ROOT_PASSWORD is required}
-      ETCD_INITIAL_ADVERTISE_PEER_URLS: http://etcd3:2380
       ETCD_LISTEN_PEER_URLS: http://0.0.0.0:2380
-      ETCD_LISTEN_CLIENT_URLS: http://0.0.0.0:2379
-      ETCD_ADVERTISE_CLIENT_URLS: http://etcd3:2379
-      ETCD_INITIAL_CLUSTER_TOKEN: ${ETCD_INITIAL_CLUSTER_TOKEN:?ETCD_INITIAL_CLUSTER_TOKEN is required}
-      ETCD_INITIAL_CLUSTER: etcd1=http://etcd1:2380,etcd2=http://etcd2:2380,etcd3=http://etcd3:2380
-      ETCD_INITIAL_CLUSTER_STATE: new
-    networks:
-      - etcd
+      ETCD_LOG_LEVEL: info
     volumes:
-      - etcd-02vol:/bitnami/etcd/data
-
-  nginx:
-    image: nginx:alpine
-    configs:
-      - source: nginx_config
-        target: /etc/nginx/nginx.conf
-    networks:
-      - etcd
+      - etcd:/bitnami/etcd/data
     ports:
       - 2379:2379
-
-configs:
-  nginx_config:
-    file: ./nginx/nginx.conf
-
-volumes:
-  etcd-00vol:
-    driver: local
-  etcd-01vol:
-    driver: local
-  etcd-02vol:
-    driver: local
-
-networks:
-  etcd:
-    driver: overlay
-    driver_opts:
-      encrypted: "true"
-    internal: true
+    networks:
+      - etcd_area_lan
+    deploy:
+      replicas: ${ETCD_REPLICAS:-3}
+      placement:
+        max_replicas_per_node: 1
+        constraints:
+          - node.role == manager
+          - node.labels.etcd == true
+        preferences:
+          - spread: node.labels.etcd
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      rollback_config:
+        parallelism: 1
+        delay: 5s
+        failure_action: pause
+        monitor: 60s
+        max_failure_ratio: 0.3
+      update_config:
+        parallelism: 1
+        delay: 5s
+        failure_action: rollback
+        monitor: 60s
+        max_failure_ratio: 0.3
+        order: stop-first
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 512M
+        reservations:
+          cpus: "0.25"
+          memory: 256M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
