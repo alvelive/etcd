@@ -4,12 +4,12 @@ volumes:
 
 networks:
   etcd_area_lan:
-    driver: overlay
+    driver: bridge
 
 services:
   etcd:
     image: bitnami/etcd:3
-    hostname: etcd1
+    hostname: etcd-{{.Task.Slot}}
     environment:
       ETCD_NAME: etcd-{{.Task.Slot}}
       ETCD_ROOT_PASSWORD: ${ETCD_ROOT_PASSWORD:?ETCD_ROOT_PASSWORD is required}
