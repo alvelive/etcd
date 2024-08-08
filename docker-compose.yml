@@ -14,7 +14,7 @@ services:
     networks:
       - etcd
     volumes:
-      - etcd1:/bitnami/etcd/data
+      - etcd-00vol:/bitnami/etcd/data
   etcd2:
     image: docker.io/bitnami/etcd:3
     environment:
@@ -30,7 +30,7 @@ services:
     networks:
       - etcd
     volumes:
-      - etcd2:/bitnami/etcd/data
+      - etcd-01vol:/bitnami/etcd/data
   etcd3:
     image: docker.io/bitnami/etcd:3
     environment:
@@ -46,7 +46,7 @@ services:
     networks:
       - etcd
     volumes:
-      - etcd3:/bitnami/etcd/data
+      - etcd-02vol:/bitnami/etcd/data
 
   nginx:
     image: nginx:alpine
@@ -64,10 +64,16 @@ configs:
     file: ./nginx/nginx.conf
 
 volumes:
-  etcd1:
-  etcd2:
-  etcd3:
+  etcd-00vol:
+    driver: local
+  etcd-01vol:
+    driver: local
+  etcd-02vol:
+    driver: local
 
 networks:
   etcd:
-    driver: bridge
+    driver: overlay
+    driver_opts:
+      encrypted: "true"
+    internal: true
