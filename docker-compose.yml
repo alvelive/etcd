@@ -4,8 +4,7 @@ volumes:
 
 networks:
   etcd_area_lan:
-    name: etcd_area_lan
-    external: true
+    driver: overlay
 
 services:
   etcd:
@@ -33,7 +32,6 @@ services:
         max_replicas_per_node: 1
         constraints:
           - node.role == manager
-          - node.labels.etcd == true
         preferences:
           - spread: node.labels.etcd
       restart_policy:
