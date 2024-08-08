@@ -18,7 +18,6 @@ services:
       ETCD_INITIAL_ADVERTISE_PEER_URLS: http://etcd-{{.Task.Slot}}:2380
       ETCD_INITIAL_CLUSTER_STATE: new
       ETCD_INITIAL_CLUSTER_TOKEN: ${ETCD_INITIAL_CLUSTER_TOKEN:?ETCD_INITIAL_CLUSTER_TOKEN is required}
-      ETCD_INITIAL_CLUSTER: etcd1=http://etcd1:2380,etcd2=http://etcd2:2380,etcd3=http://etcd3:2380
       ETCD_LISTEN_CLIENT_URLS: http://0.0.0.0:2379
       ETCD_LISTEN_PEER_URLS: http://0.0.0.0:2380
       ETCD_LOG_LEVEL: info
