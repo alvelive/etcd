@@ -1,83 +1,52 @@
-version: "3.8"
-
 services:
-  etcd-00:
-    image: quay.io/coreos/etcd:v3.5.0
-    hostname: etcd-00
-    command:
-      - etcd
-      - --name=etcd-00
-      - --data-dir=data.etcd
-      - --advertise-client-urls=http://etcd-00:2379
-      - --listen-client-urls=http://0.0.0.0:2379
-      - --initial-advertise-peer-urls=http://etcd-00:2380
-      - --listen-peer-urls=http://0.0.0.0:2380
-      - --initial-cluster=etcd-00=http://etcd-00:2380,etcd-01=http://etcd-01:2380,etcd-02=http://etcd-02:2380
-      - --initial-cluster-state=new
-      - --initial-cluster-token=etcd-cluster-1
-    volumes:
-      - etcd-00vol:/data.etcd
+  etcd1:
+    image: docker.io/bitnami/etcd:3
+    environment:
+      - ETCD_NAME=etcd1
+      - ETCD_ROOT_PASSWORD=${ETCD_ROOT_PASSWORD:?ETCD_ROOT_PASSWORD is required}
+      - ETCD_INITIAL_ADVERTISE_PEER_URLS=http://etcd1:2380
+      - ETCD_LISTEN_PEER_URLS=http://0.0.0.0:2380
+      - ETCD_LISTEN_CLIENT_URLS=http://0.0.0.0:2379
+      - ETCD_ADVERTISE_CLIENT_URLS=http://etcd1:2379
+      - ETCD_INITIAL_CLUSTER_TOKEN=etcd-cluster
+      - ETCD_INITIAL_CLUSTER=etcd1=http://etcd1:2380,etcd2=http://etcd2:2380,etcd3=http://etcd3:2380
+      - ETCD_INITIAL_CLUSTER_STATE=new
     networks:
       - etcd
-    deploy:
-      replicas: 1
-      update_config:
-        parallelism: 1
-        delay: 10s
-      restart_policy:
-        condition: on-failure
-
-  etcd-01:
-    image: quay.io/coreos/etcd:v3.5.0
-    hostname: etcd-01
-    command:
-      - etcd
-      - --name=etcd-01
-      - --data-dir=data.etcd
-      - --advertise-client-urls=http://etcd-01:2379
-      - --listen-client-urls=http://0.0.0.0:2379
-      - --initial-advertise-peer-urls=http://etcd-01:2380
-      - --listen-peer-urls=http://0.0.0.0:2380
-      - --initial-cluster=etcd-00=http://etcd-00:2380,etcd-01=http://etcd-01:2380,etcd-02=http://etcd-02:2380
-      - --initial-cluster-state=new
-      - --initial-cluster-token=etcd-cluster-1
     volumes:
-      - etcd-01vol:/data.etcd
+      - etcd1:/bitnami/etcd/data
+  etcd2:
+    image: docker.io/bitnami/etcd:3
+    environment:
+      - ETCD_NAME=etcd2
+      - ETCD_ROOT_PASSWORD=${ETCD_ROOT_PASSWORD:?ETCD_ROOT_PASSWORD is required}
+      - ETCD_INITIAL_ADVERTISE_PEER_URLS=http://etcd2:2380
+      - ETCD_LISTEN_PEER_URLS=http://0.0.0.0:2380
+      - ETCD_LISTEN_CLIENT_URLS=http://0.0.0.0:2379
+      - ETCD_ADVERTISE_CLIENT_URLS=http://etcd2:2379
+      - ETCD_INITIAL_CLUSTER_TOKEN=etcd-cluster
+      - ETCD_INITIAL_CLUSTER=etcd1=http://etcd1:2380,etcd2=http://etcd2:2380,etcd3=http://etcd3:2380
+      - ETCD_INITIAL_CLUSTER_STATE=new
     networks:
       - etcd
-    deploy:
-      replicas: 1
-      update_config:
-        parallelism: 1
-        delay: 10s
-      restart_policy:
-        condition: on-failure
-
-  etcd-02:
-    image: quay.io/coreos/etcd:v3.5.0
-    hostname: etcd-02
-    command:
-      - etcd
-      - --name=etcd-02
-      - --data-dir=data.etcd
-      - --advertise-client-urls=http://etcd-02:2379
-      - --listen-client-urls=http://0.0.0.0:2379
-      - --initial-advertise-peer-urls=http://etcd-02:2380
-      - --listen-peer-urls=http://0.0.0.0:2380
-      - --initial-cluster=etcd-00=http://etcd-00:2380,etcd-01=http://etcd-01:2380,etcd-02=http://etcd-02:2380
-      - --initial-cluster-state=new
-      - --initial-cluster-token=etcd-cluster-1
     volumes:
-      - etcd-02vol:/data.etcd
+      - etcd2:/bitnami/etcd/data
+  etcd3:
+    image: docker.io/bitnami/etcd:3
+    environment:
+      - ETCD_NAME=etcd3
+      - ETCD_ROOT_PASSWORD=${ETCD_ROOT_PASSWORD:?ETCD_ROOT_PASSWORD is required}
+      - ETCD_INITIAL_ADVERTISE_PEER_URLS=http://etcd3:2380
+      - ETCD_LISTEN_PEER_URLS=http://0.0.0.0:2380
+      - ETCD_LISTEN_CLIENT_URLS=http://0.0.0.0:2379
+      - ETCD_ADVERTISE_CLIENT_URLS=http://etcd3:2379
+      - ETCD_INITIAL_CLUSTER_TOKEN=etcd-cluster
+      - ETCD_INITIAL_CLUSTER=etcd1=http://etcd1:2380,etcd2=http://etcd2:2380,etcd3=http://etcd3:2380
+      - ETCD_INITIAL_CLUSTER_STATE=new
     networks:
       - etcd
-    deploy:
-      replicas: 1
-      update_config:
-        parallelism: 1
-        delay: 10s
-      restart_policy:
-        condition: on-failure
+    volumes:
+      - etcd3:/bitnami/etcd/data
 
   nginx:
     image: nginx:alpine
@@ -89,29 +58,16 @@ services:
       - etcd
     ports:
       - 2379:2379
-    deploy:
-      replicas: 1
-      update_config:
-        parallelism: 1
-        delay: 10s
-      restart_policy:
-        condition: on-failure
 
 configs:
   nginx_config:
     file: ./nginx/nginx.conf
 
 volumes:
-  etcd-00vol:
-    driver: local
-  etcd-01vol:
-    driver: local
-  etcd-02vol:
-    driver: local
+  etcd1:
+  etcd2:
+  etcd3:
 
 networks:
   etcd:
-    driver: overlay
-    driver_opts:
-      encrypted: "true"
-    internal: true
+    driver: bridge
